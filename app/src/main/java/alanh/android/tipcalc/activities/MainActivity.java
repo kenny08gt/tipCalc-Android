@@ -1,4 +1,4 @@
-package alanh.android.tipcalc;
+package alanh.android.tipcalc.activities;
 
 import android.content.Context;
 import android.content.Intent;
@@ -15,6 +15,13 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import java.util.Date;
+
+import alanh.android.tipcalc.R;
+import alanh.android.tipcalc.TipCalcApp;
+import alanh.android.tipcalc.fragments.TipHistoryListFragment;
+import alanh.android.tipcalc.fragments.TipHistoryListFragmentListener;
+import alanh.android.tipcalc.model.TipRecord;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
@@ -22,19 +29,12 @@ import butterknife.OnClick;
 public class MainActivity extends AppCompatActivity {
     @Bind(R.id.inputBill)
     EditText inputBill;
-    @Bind(R.id.btnSubmit)
-    Button btnSubmit;
     @Bind(R.id.inputPercentage)
     EditText inputPercentage;
-    @Bind(R.id.btnIncrease)
-    Button btnIncrease;
-    @Bind(R.id.btnDecrease)
-    Button btnDecrease;
-    @Bind(R.id.btnClear)
-    Button btnClear;
     @Bind(R.id.txtTip)
     TextView txtTip;
 
+    private TipHistoryListFragmentListener fragmentListener;
     private final static int TIP_STEP_CHANGE=1;
     private final static int DEFAULT_TIP_PERCENTAGE=10;
 
@@ -43,6 +43,10 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
+        TipHistoryListFragment fragment= (TipHistoryListFragment) getSupportFragmentManager()
+                                .findFragmentById(R.id.fragmentList);
+        fragment.setRetainInstance(true);
+        fragmentListener=(TipHistoryListFragmentListener)fragment;
     }
 
     @Override
@@ -65,12 +69,21 @@ public class MainActivity extends AppCompatActivity {
         if(!strInputTotal.isEmpty()){
             double total=Double.parseDouble(strInputTotal);
             int tipPercentage=getTipPercentage();
-            double tip=total*(tipPercentage/100d);
 
-            String strTip=String.format(getString(R.string.globla_message_tip),tip);
+            TipRecord record=new TipRecord();
+            record.setBill(total);
+            record.setTipPercentage(tipPercentage);
+            record.setTimeStamp(new Date());
+
+            String strTip=String.format(getString(R.string.globla_message_tip),record.getTip());
+            fragmentListener.addToList(record);
             txtTip.setVisibility(View.VISIBLE);
             txtTip.setText(strTip);
         }
+    }
+    @OnClick(R.id.btnClear)
+    public void hadleClickClear(){
+        fragmentListener.clearList();
     }
     @OnClick(R.id.btnIncrease)
     public void handleClickIncrease(){
